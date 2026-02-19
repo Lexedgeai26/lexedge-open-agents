@@ -76,7 +76,32 @@ Analysis Research Review Mgmt  Correspond.
 
 ---
 
+## 📸 Screenshots
+
+### Premium Landing Page
+![LexEdge Landing Page](assets/landing_hero.png)
+*Agentic legal intelligence console with a premium, responsive design.*
+
+### Multi-Agent Workspace
+![Agent Selection Console](assets/agent_console.png)
+*Select from specialised agents for different legal workflows.*
+
+### Intelligent Document Upload
+![Mode-aware Upload](assets/upload_prompt.png)
+*Dynamic, mode-aware prompts guide users to upload documents for instant analysis.*
+
+### Real-time Legal Processing
+![Analysis In Progress](assets/analysis_in_progress.png)
+*Parallel processing of legal documents using specialised sub-agents.*
+
+### Expert Contractual Analysis
+![Analysis Result](assets/analysis_result.png)
+*Structured, expert-level analysis of complex legal contracts and agreements.*
+
+---
+
 ## 🚀 Getting Started
+
 
 ### Prerequisites
 
