@@ -3,7 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Google ADK](https://img.shields.io/badge/Google%20ADK-Powered-4285F4.svg)](https://google.github.io/adk-docs/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Lexedgeai26/lexedge-open-agents/blob/main/CONTRIBUTING.md)
+[![GitHub Stars](https://img.shields.io/github/stars/Lexedgeai26/lexedge-open-agents?style=social)](https://github.com/Lexedgeai26/lexedge-open-agents)
 
 **LexEdge – Open Legal Agents** is an open-source, multi-agent legal AI platform built with **Google ADK (Agent Development Kit)** and **Gemini** large language models. It delivers a full-stack legal intelligence console — from contract analysis and legal research to compliance auditing and case management — orchestrated by a suite of specialised legal AI agents.
 
@@ -87,7 +88,7 @@ Analysis Research Review Mgmt  Correspond.
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/lexedge-lab/lexedge-open-agents.git
+git clone https://github.com/Lexedgeai26/lexedge-open-agents.git
 cd lexedge-open-agents
 ```
 
