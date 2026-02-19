@@ -1,0 +1,380 @@
+<!-- User Message -->
+<div class="flex gap-3 justify-end message-enter">
+    <div class="flex-1 max-w-2xl">
+        <p class="text-sm font-medium text-slate-900 mb-1 text-right">You</p>
+        <div class="bg-legal-blue text-white rounded-lg rounded-tr-none p-4 ml-auto">
+            <p>{{ user_message }}</p>
+        </div>
+    </div>
+    <div class="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i data-lucide="user" class="w-4 h-4 text-slate-600"></i>
+    </div>
+</div>
+
+<!-- Agent Response -->
+<div class="flex gap-3 message-enter">
+    <div class="w-8 h-8 bg-legal-navy rounded-lg flex items-center justify-center flex-shrink-0">
+        <span class="text-white text-xs font-bold">LE</span>
+    </div>
+    <div class="flex-1 max-w-3xl">
+        <p class="text-sm font-medium text-slate-900 mb-1">{{ agent_name }}</p>
+        
+        {% if response_type == "legal_analysis" %}
+        <!-- Legal Analysis Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-indigo-200 shadow-sm overflow-hidden">
+            <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-200 flex items-center gap-2">
+                <span class="text-indigo-600">⚖️</span>
+                <span class="text-sm font-medium text-indigo-800">Legal Analysis</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.client_name %}
+                <p class="text-sm text-indigo-700"><strong>Client:</strong> {{ response.client_name }} | <strong>Jurisdiction:</strong> {{ response.jurisdiction }}</p>
+                {% endif %}
+                
+                {% if response.analysis and response.analysis.legal_issues %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Legal Issues</p>
+                    <p class="text-sm text-slate-700">{{ response.analysis.legal_issues }}</p>
+                </div>
+                {% endif %}
+                
+                {% if response.analysis and response.analysis.recommended_actions %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Recommended Actions</p>
+                    <ul class="text-sm text-slate-700 list-disc list-inside space-y-1">
+                        {% for action in response.analysis.recommended_actions %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-amber-50 px-4 py-2 border-t border-amber-200">
+                <p class="text-xs text-amber-700">⚠️ {{ response.disclaimer or 'Review with licensed counsel.' }}</p>
+            </div>
+        </div>
+        
+        {% elif response_type == "contract_review" %}
+        <!-- Contract Review Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-cyan-200 shadow-sm overflow-hidden">
+            <div class="bg-cyan-50 px-4 py-2 border-b border-cyan-200 flex items-center gap-2">
+                <span class="text-cyan-600">📄</span>
+                <span class="text-sm font-medium text-cyan-800">Contract Review</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.review and response.review.executive_summary %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Executive Summary</p>
+                    <p class="text-sm text-slate-700">{{ response.review.executive_summary }}</p>
+                </div>
+                {% endif %}
+                
+                {% if response.review and response.review.risk_assessment %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Risk Assessment</p>
+                    {% if response.review.risk_assessment.high_risk_clauses %}
+                    <div class="bg-red-50 rounded p-2 mb-2">
+                        <p class="text-xs font-semibold text-red-700 mb-1">High Risk:</p>
+                        <ul class="text-xs text-red-600 list-disc list-inside">
+                            {% for item in response.review.risk_assessment.high_risk_clauses %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    {% if response.review.risk_assessment.medium_risk_clauses %}
+                    <div class="bg-yellow-50 rounded p-2">
+                        <p class="text-xs font-semibold text-yellow-700 mb-1">Medium Risk:</p>
+                        <ul class="text-xs text-yellow-600 list-disc list-inside">
+                            {% for item in response.review.risk_assessment.medium_risk_clauses %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if response.review and response.review.recommended_changes %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Recommended Changes</p>
+                    <ul class="text-sm text-slate-700 list-disc list-inside space-y-1">
+                        {% for change in response.review.recommended_changes %}
+                        <li>{{ change }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-amber-50 px-4 py-2 border-t border-amber-200">
+                <p class="text-xs text-amber-700">⚠️ {{ response.disclaimer or 'Review with licensed counsel before signing.' }}</p>
+            </div>
+        </div>
+        
+        {% elif response_type == "case_law_search" or response_type == "legal_research" %}
+        <!-- Legal Research Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-purple-200 shadow-sm overflow-hidden">
+            <div class="bg-purple-50 px-4 py-2 border-b border-purple-200 flex items-center gap-2">
+                <span class="text-purple-600">🔍</span>
+                <span class="text-sm font-medium text-purple-800">Legal Research</span>
+                {% if response.jurisdiction %}
+                <span class="text-xs text-purple-600 ml-auto">{{ response.jurisdiction }}</span>
+                {% endif %}
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.results and response.results.cases %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Relevant Cases</p>
+                    {% for case in response.results.cases %}
+                    <div class="bg-purple-50 rounded p-2 mb-2">
+                        <p class="text-sm font-semibold text-purple-800">{{ case.case_name }}</p>
+                        <p class="text-xs text-slate-500">{{ case.citation }}</p>
+                        <p class="text-sm text-slate-700 mt-1">{{ case.key_holding }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if response.results and response.results.legal_principles %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Legal Principles</p>
+                    <ul class="text-sm text-slate-700 list-disc list-inside space-y-1">
+                        {% for principle in response.results.legal_principles %}
+                        <li>{{ principle }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-amber-50 px-4 py-2 border-t border-amber-200">
+                <p class="text-xs text-amber-700">⚠️ {{ response.disclaimer or 'Verify all citations independently.' }}</p>
+            </div>
+        </div>
+        
+        {% elif response_type == "deadline_tracking" or response_type == "case_timeline" or response_type == "case_management" %}
+        <!-- Case Management Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-green-200 shadow-sm overflow-hidden">
+            <div class="bg-green-50 px-4 py-2 border-b border-green-200 flex items-center gap-2">
+                <span class="text-green-600">📋</span>
+                <span class="text-sm font-medium text-green-800">Case Management</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.case_name %}
+                <p class="text-sm font-semibold text-green-700">{{ response.case_name }}</p>
+                {% endif %}
+                
+                {% if response.deadlines and response.deadlines.upcoming %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Upcoming Deadlines</p>
+                    {% for deadline in response.deadlines.upcoming %}
+                    <div class="flex justify-between items-center py-2 border-b border-green-100 last:border-0">
+                        <span class="text-sm text-slate-700">{{ deadline.type }}: {{ deadline.description }}</span>
+                        <span class="text-xs font-medium {% if deadline.priority == 'High' %}text-red-600{% else %}text-slate-500{% endif %}">{{ deadline.date }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if response.timeline and response.timeline.phases %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Case Timeline</p>
+                    {% for phase in response.timeline.phases %}
+                    <div class="flex items-center gap-2 py-1">
+                        <span class="w-2 h-2 rounded-full {% if phase.status == 'Completed' %}bg-green-500{% elif phase.status == 'In Progress' %}bg-yellow-500{% else %}bg-slate-300{% endif %}"></span>
+                        <span class="text-sm text-slate-700">{{ phase.phase }}</span>
+                        <span class="text-xs text-slate-400">({{ phase.status }})</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% elif response_type == "compliance_audit" or response_type == "compliance" %}
+        <!-- Compliance Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-red-200 shadow-sm overflow-hidden">
+            <div class="bg-red-50 px-4 py-2 border-b border-red-200 flex items-center gap-2">
+                <span class="text-red-600">🛡️</span>
+                <span class="text-sm font-medium text-red-800">Compliance Review</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.frameworks_audited %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Frameworks Audited</p>
+                    <div class="flex flex-wrap gap-2">
+                        {% for framework in response.frameworks_audited %}
+                        <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">{{ framework }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if response.overall_assessment and response.overall_assessment.priority_areas %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Priority Areas</p>
+                    <ul class="text-sm text-slate-700 list-disc list-inside space-y-1">
+                        {% for area in response.overall_assessment.priority_areas %}
+                        <li>{{ area }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if response.overall_assessment and response.overall_assessment.next_steps %}
+                <div class="bg-yellow-50 rounded p-3">
+                    <p class="text-xs font-semibold text-yellow-700 uppercase mb-1">Next Steps</p>
+                    <ul class="text-sm text-yellow-800 list-disc list-inside space-y-1">
+                        {% for step in response.overall_assessment.next_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-amber-50 px-4 py-2 border-t border-amber-200">
+                <p class="text-xs text-amber-700">⚠️ {{ response.disclaimer or 'Conduct formal assessment with qualified professionals.' }}</p>
+            </div>
+        </div>
+        
+        {% elif response_type == "client_intake" or response_type == "case_profile" %}
+        <!-- Case Intake Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-blue-200 shadow-sm overflow-hidden">
+            <div class="bg-blue-50 px-4 py-2 border-b border-blue-200 flex items-center gap-2">
+                <span class="text-blue-600">👤</span>
+                <span class="text-sm font-medium text-blue-800">Case Intake</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.profile or response.client_info %}
+                {% set profile = response.profile or response.client_info %}
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    {% if profile.client_name %}
+                    <p><span class="text-slate-500">Client:</span> <span class="font-medium">{{ profile.client_name }}</span></p>
+                    {% endif %}
+                    {% if profile.case_type %}
+                    <p><span class="text-slate-500">Case Type:</span> <span class="font-medium">{{ profile.case_type }}</span></p>
+                    {% endif %}
+                    {% if profile.jurisdiction %}
+                    <p><span class="text-slate-500">Jurisdiction:</span> <span class="font-medium">{{ profile.jurisdiction }}</span></p>
+                    {% endif %}
+                    {% if profile.status %}
+                    <p><span class="text-slate-500">Status:</span> <span class="font-medium">{{ profile.status }}</span></p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if response.next_steps %}
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Next Steps</p>
+                    <ul class="text-sm text-slate-700 list-disc list-inside space-y-1">
+                        {% for step in response.next_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if response.confirmation %}
+                <p class="text-sm text-green-600 font-medium">✓ {{ response.confirmation }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% elif response_type == "client_letter" or response_type == "demand_letter" or response_type == "legal_notice" or response_type == "settlement_proposal" %}
+        <!-- Legal Correspondence Card -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-blue-200 shadow-sm overflow-hidden">
+            <div class="bg-blue-50 px-4 py-2 border-b border-blue-200 flex items-center gap-2">
+                <span class="text-blue-600">✉️</span>
+                <span class="text-sm font-medium text-blue-800">Legal Correspondence</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {% if response.letter and response.letter.header %}
+                <div class="border-b border-slate-200 pb-3">
+                    <p class="font-semibold text-slate-900">{{ response.letter.header.title }}</p>
+                    <p class="text-sm text-slate-500">To: {{ response.letter.header.to or response.letter.header.recipient }}</p>
+                    <p class="text-sm text-slate-500">Date: {{ response.letter.header.date }}</p>
+                </div>
+                {% endif %}
+                
+                {% if response.letter and response.letter.body %}
+                <div class="text-sm text-slate-700 whitespace-pre-wrap">
+                    {% if response.letter.body is string %}
+                    {{ response.letter.body }}
+                    {% else %}
+                    {% for key, value in response.letter.body.items() %}
+                    <div class="mb-2">
+                        <p class="font-medium text-slate-600 capitalize">{{ key|replace('_', ' ') }}:</p>
+                        <p>{{ value }}</p>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-amber-50 px-4 py-2 border-t border-amber-200">
+                <p class="text-xs text-amber-700">⚠️ {{ response.disclaimer or 'Review with licensed counsel before sending.' }}</p>
+            </div>
+        </div>
+        
+        {% elif response_type == "formatted" %}
+        <!-- Formatted Response Card with HTML and Follow-up Suggestions -->
+        <div class="bg-white rounded-lg rounded-tl-none border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Response Content -->
+            <div class="p-5 max-h-[600px] overflow-y-auto">
+                <div class="prose prose-sm max-w-none">
+                    {% if response.html_content %}
+                        {{ response.html_content | safe }}
+                    {% elif response.raw_content %}
+                        <p class="text-slate-700">{{ response.raw_content }}</p>
+                    {% else %}
+                        <p class="text-slate-500 italic">No response received. Please try again.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Follow-up Suggestions -->
+            {% if response.suggestions and response.suggestions | length > 0 %}
+            <div class="bg-slate-50 px-5 py-4 border-t border-slate-200">
+                <p class="text-xs font-semibold text-slate-500 uppercase mb-3">Suggested Follow-ups</p>
+                <div class="flex flex-wrap gap-2">
+                    {% for suggestion in response.suggestions %}
+                    <button 
+                        type="button"
+                        {% if suggestion.action %}
+                        onclick="handleAction('{{ suggestion.action }}')"
+                        {% else %}
+                        onclick="sendFollowup('{{ suggestion.command | e }}')"
+                        {% endif %}
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-full text-xs font-medium text-slate-700 hover:bg-legal-blue hover:text-white hover:border-legal-blue transition-colors">
+                        <i data-lucide="{{ suggestion.icon or 'message-circle' }}" class="w-3 h-3"></i>
+                        {{ suggestion.text }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Legal disclaimer -->
+            <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+                <p class="text-xs text-slate-400">⚖️ AI-assisted legal analysis. Always consult with licensed counsel.</p>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- Fallback General Response Card -->
+        <div class="bg-white rounded-lg rounded-tl-none p-4 border border-slate-200 shadow-sm">
+            <div class="text-slate-700 text-sm leading-relaxed">
+                {% if response.content %}
+                    <p>{{ response.content }}</p>
+                {% elif response is string %}
+                    <p>{{ response }}</p>
+                {% else %}
+                    <p class="text-slate-500 italic">No response received.</p>
+                {% endif %}
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100">
+                <p class="text-xs text-slate-400">⚖️ AI-assisted legal analysis. Always consult with licensed counsel.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>

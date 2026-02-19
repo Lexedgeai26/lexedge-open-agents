@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}LexEdge Legal AI - Chat{% endblock %}
+
+{% block body %}
+<div class="h-screen flex flex-col bg-slate-50" x-data="{ showCommands: true }">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="/app/" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div class="w-10 h-10 bg-legal-navy rounded-lg flex items-center justify-center">
+                <span class="text-white font-bold text-sm">LE</span>
+            </div>
+            <div>
+                <h1 class="font-semibold text-slate-900">LexEdge Legal AI</h1>
+                <p class="text-xs text-slate-500">Legal Intelligence Console</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                Connected
+            </span>
+            <a href="/app/settings" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar - Agent Commands -->
+        <aside class="w-64 bg-white border-r border-slate-200 overflow-y-auto hidden lg:block">
+            <div class="p-4">
+                <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Legal Agents</h2>
+                <div class="space-y-2">
+                    {% for key, cmd in commands.items() %}
+                    <button hx-get="/app/command/{{ key }}" hx-target="#command-guidance" hx-swap="innerHTML"
+                        @click="showCommands = false"
+                        class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition group">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">{{ cmd.icon }}</span>
+                            <div>
+                                <p class="text-sm font-medium text-slate-700 group-hover:text-legal-blue">{{ cmd.title
+                                    }}</p>
+                                <p class="text-xs text-slate-400 truncate">{{ cmd.description[:30] }}...</p>
+                            </div>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Legal Settings Info -->
+            <div class="p-4 border-t border-slate-200">
+                <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Current Settings</h2>
+                <div class="space-y-2 text-xs text-slate-600">
+                    <p><span class="font-medium">Jurisdiction:</span> {{ legal_settings.jurisdiction }}</p>
+                    <p><span class="font-medium">Legal System:</span> {{ legal_settings.legal_system }}</p>
+                    <p><span class="font-medium">Domain:</span> {{ legal_settings.lawyer_domain }}</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Container -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Messages Area -->
+            <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex gap-3 message-enter">
+                    <div class="w-8 h-8 bg-legal-navy rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-xs font-bold">LE</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-900 mb-1">LexEdge</p>
+                        <div class="bg-white rounded-lg rounded-tl-none p-4 border border-slate-200 shadow-sm">
+                            <p class="text-slate-700">Welcome to <strong>LexEdge Legal AI</strong>. I am your legal
+                                assistant. How can I help you today?</p>
+
+                            <!-- Document Analysis Guide -->
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                                <p class="text-xs font-semibold text-blue-800 mb-1 flex items-center gap-1">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                    DOCUMENT ANALYSIS GUIDE
+                                </p>
+                                <p class="text-xs text-blue-700 leading-relaxed">
+                                    To analyze documents, you can:
+                                    <br>• Use the <strong>attachment icon</strong> on the bottom left to upload (PDF,
+                                    DOCX, TXT).
+                                    <br>• <strong>Copy and paste</strong> the text directly into the chat box.
+                                </p>
+                            </div>
+
+                            <!-- Quick Commands -->
+                            <div id="command-guidance" class="mt-4">
+                                <p class="text-xs text-slate-500 mb-2">Select a legal service to get started:</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {% for key, cmd in commands.items() %}
+                                    <button onclick="sendCommand('{{ cmd.command }}', '{{ cmd.agent }}')"
+                                        class="bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg p-3 text-left transition group">
+                                        <span class="text-lg block mb-1">{{ cmd.icon }}</span>
+                                        <p class="text-xs font-medium text-slate-700 group-hover:text-legal-blue">{{
+                                            cmd.title }}</p>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic messages will be appended here -->
+                <div id="chat-messages"></div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="hidden flex gap-3">
+                    <div class="w-8 h-8 bg-legal-navy rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-xs font-bold">LE</span>
+                    </div>
+                    <div class="bg-white rounded-lg rounded-tl-none p-4 border border-slate-200">
+                        <div class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
+                            <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="bg-white border-t border-slate-200 p-4">
+                <!-- File Preview -->
+                <div id="file-preview" class="hidden mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 text-legal-blue"></i>
+                            <span id="file-name" class="text-sm text-slate-700 font-medium"></span>
+                            <span id="file-size" class="text-xs text-slate-400"></span>
+                        </div>
+                        <button type="button" onclick="clearFile()" class="text-slate-400 hover:text-red-500">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="chat-form" hx-post="/app/send-message" hx-target="#chat-messages" hx-swap="beforeend"
+                    hx-indicator="#typing-indicator" hx-encoding="multipart/form-data" class="flex gap-3">
+                    <input type="hidden" name="session_id" value="{{ session_id }}">
+                    <input type="hidden" id="force-agent" name="force_agent" value="">
+
+                    <!-- File Upload Button -->
+                    <label
+                        class="flex items-center justify-center w-12 h-12 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition border border-slate-300">
+                        <input type="file" name="file" id="file-input"
+                            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp" class="hidden"
+                            onchange="handleFileSelect(this)">
+                        <i data-lucide="paperclip" class="w-5 h-5 text-slate-500"></i>
+                    </label>
+
+                    <div class="flex-1 relative">
+                        <input type="text" name="message" id="message-input"
+                            placeholder="Ask a legal question or upload a document..."
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-blue focus:border-transparent"
+                            autocomplete="off">
+                    </div>
+
+                    <button type="submit"
+                        class="bg-legal-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2">
+                        <span class="hidden sm:inline">Send</span>
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </form>
+
+                <p class="text-xs text-slate-400 mt-2 text-center">
+                    📎 Upload PDF, DOCX, TXT, or images for analysis. ⚠️ AI-generated legal analysis.
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Session ID
+    const sessionId = "{{ session_id }}";
+    let isSubmitting = false;
+
+    // Send command with forced agent
+    function sendCommand(command, agent) {
+        if (isSubmitting) return;
+        document.getElementById('force-agent').value = agent;
+        document.getElementById('message-input').value = command;
+        document.getElementById('chat-form').requestSubmit();
+        // Clear the input so the command text doesn't stay visible
+        document.getElementById('message-input').value = '';
+    }
+
+    // Send follow-up suggestion (context-aware)
+    function sendFollowup(command) {
+        if (isSubmitting) return;
+
+        // Set the message and submit directly via HTMX
+        const form = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const hiddenInput = document.getElementById('force-agent');
+
+        messageInput.value = command;
+
+        // Use HTMX to submit the form directly
+        htmx.trigger(form, 'submit');
+
+        // Clear the input so the command text doesn't stay visible
+        messageInput.value = '';
+
+        // Re-initialize icons after HTMX swap
+        setTimeout(() => lucide.createIcons(), 100);
+    }
+
+    // Handle frontend-only actions
+    function handleAction(action) {
+        if (action === 'trigger-upload') {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+    }
+
+    // File upload handling
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            const preview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
+            const fileSize = document.getElementById('file-size');
+
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            preview.classList.remove('hidden');
+
+            // Re-initialize icons
+            lucide.createIcons();
+        }
+    }
+
+    function clearFile() {
+        const input = document.getElementById('file-input');
+        const preview = document.getElementById('file-preview');
+        input.value = '';
+        preview.classList.add('hidden');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Prevent double submission
+    document.getElementById('chat-form').addEventListener('htmx:beforeRequest', function (evt) {
+        if (isSubmitting) {
+            evt.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        document.getElementById('typing-indicator').classList.remove('hidden');
+    });
+
+    // Clear form after submission
+    document.getElementById('chat-form').addEventListener('htmx:afterRequest', function () {
+        isSubmitting = false;
+        document.getElementById('force-agent').value = '';
+        document.getElementById('message-input').value = '';
+        clearFile();
+        document.getElementById('typing-indicator').classList.add('hidden');
+
+        // Scroll to bottom
+        const container = document.getElementById('messages-container');
+        container.scrollTop = container.scrollHeight;
+    });
+
+    // Re-initialize Lucide icons after HTMX content swap
+    document.body.addEventListener('htmx:afterSwap', function () {
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

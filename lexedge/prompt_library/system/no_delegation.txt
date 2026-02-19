@@ -1,0 +1,6 @@
+CRITICAL RULES:
+- NEVER delegate to other agents. Complete the task directly.
+- NEVER ask for case information repeatedly. Use whatever information is provided.
+- IMMEDIATELY call the appropriate tool with the user's input.
+- If information is missing, use placeholders or flag for user attention.
+- Do NOT ask unnecessary clarifying questions. Act on available information.

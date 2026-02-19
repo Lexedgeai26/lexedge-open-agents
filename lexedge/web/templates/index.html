@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}LexEdge Legal AI - Home{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-legal-navy rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">LE</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-900">LexEdge Legal AI</h1>
+                        <p class="text-xs text-slate-500">Legal Intelligence Platform</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="#features" class="text-sm text-slate-600 hover:text-legal-blue">Features</a>
+                    <a href="#agents" class="text-sm text-slate-600 hover:text-legal-blue">Agents</a>
+                    <a href="/app/chat" class="bg-legal-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                        Open Console
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <p class="text-legal-blue font-medium text-sm mb-4">AI-Powered Legal Intelligence</p>
+                    <h2 class="text-4xl lg:text-5xl font-bold text-slate-900 leading-tight mb-6">
+                        Agentic legal intelligence for modern law practice.
+                    </h2>
+                    <p class="text-lg text-slate-600 mb-8">
+                        LexEdge combines advanced AI models with multi-agent orchestration to deliver 
+                        comprehensive legal support tailored to your practice areas.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="/app/chat" class="bg-legal-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-5 h-5"></i>
+                            Legal Assistant
+                        </a>
+                        <a href="/app/chat?agent=contract" class="bg-white text-slate-700 px-6 py-3 rounded-lg font-medium border border-slate-300 hover:border-legal-blue hover:text-legal-blue transition flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                            Contract Review
+                        </a>
+                    </div>
+                    
+                    <!-- Metrics -->
+                    <div class="grid grid-cols-3 gap-6 mt-12">
+                        <div>
+                            <p class="text-2xl font-bold text-legal-navy">8 Agents</p>
+                            <p class="text-sm text-slate-500">Specialized Legal AI</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-legal-navy">Multi-Jurisdiction</p>
+                            <p class="text-sm text-slate-500">Configurable Settings</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-legal-navy">Compliance</p>
+                            <p class="text-sm text-slate-500">GDPR, SOX, HIPAA</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <p class="font-medium text-slate-700">Legal Workflow Summary</p>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Live</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-semibold text-slate-900 mb-2">Multi-Agent Legal Routing</h3>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Assign contract analysis, legal research, and compliance agents to the same case 
+                            while LexEdge handles document review and legal reasoning.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">Contract Review</span>
+                            <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">Case Law Research</span>
+                            <span class="bg-red-50 text-red-700 px-3 py-1 rounded-full text-xs font-medium">Compliance Audit</span>
+                        </div>
+                        <a href="/app/chat" class="text-legal-blue text-sm font-medium hover:underline">
+                            Open Legal Console →
+                        </a>
+                    </div>
+                    <div class="bg-amber-50 px-6 py-3 border-t border-amber-100">
+                        <p class="text-xs text-amber-700">⚠️ AI-assisted analysis. Review with licensed counsel.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Core LexEdge Capabilities</h2>
+                <p class="text-slate-600">Streamline legal workflows with AI-powered document analysis and research.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="file-search" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Document Analysis</h3>
+                    <p class="text-slate-600 text-sm">Analyze legal documents, contracts, and filings to extract key provisions, identify risks, and provide structured summaries.</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="calendar-check" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Case Management</h3>
+                    <p class="text-slate-600 text-sm">Track deadlines, manage case timelines, monitor filings, and coordinate case workflow across multiple matters.</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="mail" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Legal Correspondence</h3>
+                    <p class="text-slate-600 text-sm">Draft professional client letters, legal notices, demand letters, and settlement proposals with proper legal formatting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agents Section -->
+    <section id="agents" class="py-16 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Legal Agents Available Now</h2>
+                <p class="text-slate-600">Specialized legal agents coordinated by Google ADK for comprehensive legal support.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% for key, cmd in commands.items() %}
+                <a href="/app/chat?agent={{ key }}" 
+                   class="bg-white rounded-xl p-4 border border-slate-200 hover:border-legal-blue hover:shadow-md transition text-center group">
+                    <span class="text-2xl mb-2 block">{{ cmd.icon }}</span>
+                    <p class="font-medium text-slate-900 group-hover:text-legal-blue">{{ cmd.title }}</p>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-8">
+                <a href="/app/chat" class="bg-legal-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
+                    Consult an Agent
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h3 class="text-xl font-bold mb-1">LexEdge</h3>
+                <p class="text-slate-400 text-sm">Agentic legal workflows powered by advanced AI.</p>
+            </div>
+            <a href="/app/chat" class="bg-white text-slate-900 px-6 py-3 rounded-lg font-medium hover:bg-slate-100 transition">
+                Launch Console
+            </a>
+        </div>
+    </footer>
+</div>
+{% endblock %}

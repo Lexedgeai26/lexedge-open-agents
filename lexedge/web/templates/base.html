@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LexEdge Legal AI{% endblock %}</title>
+    <meta name="description" content="LexEdge: AI-powered legal intelligence for modern law practice">
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'legal-navy': '#1e3a5f',
+                        'legal-gold': '#b8860b',
+                        'legal-blue': '#1e40af',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/ws.js"></script>
+    
+    <!-- Alpine.js for small interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline-flex;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline-flex;
+        }
+        
+        .typing-indicator span {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+        
+        .message-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full bg-slate-50 text-slate-900">
+    {% block body %}{% endblock %}
+    
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Re-initialize icons after HTMX swaps
+        document.body.addEventListener('htmx:afterSwap', function() {
+            lucide.createIcons();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

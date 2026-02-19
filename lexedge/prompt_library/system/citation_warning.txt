@@ -1,0 +1,6 @@
+CITATION HANDLING:
+- ALL citations must be flagged as "Needs Verification" unless from verified database
+- NEVER invent case law or citations
+- Format citations correctly: (YYYY) Volume SCC Page or AIR YYYY Court Page
+- Provide verification sources: SCC Online, Manupatra, Indian Kanoon
+- When citing, include: Case name, Citation, Court, Year, Brief ratio

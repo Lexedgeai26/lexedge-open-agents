@@ -1,0 +1,18 @@
+google-generativeai
+fastapi
+uvicorn
+sqlalchemy
+httpx
+python-jose[cryptography]
+pydantic[email]
+python-dotenv
+google-adk[extensions]>=0.0.1
+requests
+jinja2
+pytest
+pytest-asyncio
+aiofiles
+python-multipart
+# Document processing
+pypdf
+python-docx

@@ -1,0 +1,61 @@
+# ── Environment & Secrets ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Testing & Coverage ────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── Node / Frontend ───────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+backend.log
+logs/
+
+# ── Uploads & Temp Files ──────────────────────────────────────
+uploads/
+/tmp/
+
+# ── macOS ────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── IDE / Editors ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ── Database ─────────────────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Backup dirs ──────────────────────────────────────────────
+lexedge/_backup/
+untitled folder/

@@ -1,0 +1,19 @@
+JURISDICTION CONTEXT: India
+
+PRIMARY CODES (effective July 1, 2024):
+- Bharatiya Nyaya Sanhita (BNS) - replaces Indian Penal Code (IPC)
+- Bharatiya Nagarik Suraksha Sanhita (BNSS) - replaces Code of Criminal Procedure (CrPC)
+- Bharatiya Sakshya Adhiniyam (BSA) - replaces Indian Evidence Act (IEA)
+
+COURT HIERARCHY:
+1. Supreme Court of India
+2. High Courts (State-level)
+3. District Courts / Sessions Courts
+4. Magistrate Courts (JMFC, CJM, etc.)
+5. Specialized Tribunals (NCLT, ITAT, Consumer Forum, etc.)
+
+IMPORTANT NOTES:
+- For offences committed before July 1, 2024, IPC/CrPC/IEA apply
+- For offences committed on or after July 1, 2024, BNS/BNSS/BSA apply
+- Always cross-reference old and new provisions for clarity
+- State-specific amendments may apply - verify for specific state

@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliview Chat Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            margin-right: 0;
+            text-align: right;
+        }
+        .agent-message {
+            background-color: #ffffff;
+            margin-left: 0;
+            margin-right: auto;
+            border: 1px solid #e0e0e0;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #b3d7ff;
+            cursor: not-allowed;
+        }
+        .status {
+            color: #888;
+            font-style: italic;
+            margin: 5px 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .code {
+            background-color: #f1f1f1;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .agent-name {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 4px;
+        }
+        /* Loading animation styles */
+        .loading-message {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            margin-left: 0;
+            margin-right: auto;
+            border: 1px solid #e0e0e0;
+        }
+        .loading-dots {
+            display: inline-block;
+        }
+        .loading-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #007bff;
+            margin: 0 2px;
+            animation: loading 1.4s infinite ease-in-out both;
+        }
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        @keyframes loading {
+            0%, 80%, 100% { 
+                transform: scale(0);
+            } 40% { 
+                transform: scale(1.0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Appliview Chat Demo</h1>
+    <div id="connection-status" class="status">Disconnected</div>
+    
+    <div id="chat-container"></div>
+    
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Type your message here...">
+        <button id="send-button">Send</button>
+    </div>
+    
+    <div class="auth-container" style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <p>Session ID: <span id="session-id">None</span></p>
+            <p>Auth Status: <span id="auth-status">Not authenticated</span></p>
+        </div>
+        <div>
+            <button id="view-history-button" style="display: none; background-color: #28a745; margin-right: 5px;">View Chat History</button>
+            <button id="test-modal-button" style="background-color: #17a2b8;">Test Modal</button>
+        </div>
+    </div>
+
+    <div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
+        <div style="background-color: white; margin: 10% auto; padding: 20px; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80%; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0;">Your Chat History</h2>
+                <button id="close-history-button" style="background-color: #f44336; cursor: pointer; padding: 5px 10px; border: none; color: white; border-radius: 4px;">Close</button>
+            </div>
+            <div id="history-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Client configuration - use a more stable user ID that persists across page reloads
+        const generateUserId = () => {
+            // Try to get stored userId from localStorage
+            let savedUserId = localStorage.getItem('lexedge_demo_user_id');
+            if (!savedUserId) {
+                // Generate a new one and save it
+                savedUserId = "demo_user_" + Math.floor(Math.random() * 1000);
+                localStorage.setItem('lexedge_demo_user_id', savedUserId);
+            }
+            return savedUserId;
+        };
+        
+        const userId = generateUserId();
+        console.log("Current user ID from localStorage:", userId);
+        
+        // Check if a specific user ID is in the URL for debugging
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUserId = urlParams.get('user_id');
+        if (urlUserId) {
+            console.log("URL contains user_id parameter:", urlUserId);
+            // Option to override localStorage with URL parameter for debugging
+            if (confirm(`Use user ID from URL (${urlUserId}) instead of stored ID (${userId})?`)) {
+                localStorage.setItem('lexedge_demo_user_id', urlUserId);
+                console.log("User ID overridden with:", urlUserId);
+                window.location.href = window.location.pathname; // Reload without the parameter
+            }
+        }
+        
+        let sessionId = null;
+        let webSocket = null;
+        let isAuthenticated = false;
+        let isProcessing = false;
+        let loadingElement = null;
+        
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const connectionStatus = document.getElementById('connection-status');
+        const sessionIdElement = document.getElementById('session-id');
+        const authStatusElement = document.getElementById('auth-status');
+        
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+            const ws_url = `${ws_scheme}://${window.location.host}/ws/client_${Math.random().toString(36).substring(2, 15)}`;
+            
+            webSocket = new WebSocket(ws_url);
+            
+            webSocket.onopen = function(e) {
+                connectionStatus.textContent = "Connected";
+                connectionStatus.style.color = "green";
+            };
+            
+            webSocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("Received message from server:", data.type);
+                
+                if (data.type === "ack") {
+                    // Acknowledgment received
+                    console.log("Server acknowledged: ", data.message);
+                    // Don't remove loading animation on ack since the actual response isn't ready yet
+                } else if (data.type === "response") {
+                    console.log("Received response with session:", data.session_id, "Current session:", sessionId);
+                    
+                    // Agent response received, remove loading animation
+                    removeLoadingAnimation();
+                    
+                    // Update processing state
+                    isProcessing = false;
+                    enableInput();
+                    
+                    // Check if this is a new session
+                    const isNewSession = (sessionId !== data.session_id) && (sessionId !== null);
+                    
+                    // Update session ID
+                    sessionId = data.session_id;
+                    sessionIdElement.textContent = sessionId;
+                    
+                    // Update authentication status
+                    const wasAuthenticated = isAuthenticated;
+                    isAuthenticated = data.is_authenticated || false;
+                    authStatusElement.textContent = isAuthenticated ? "Authenticated" : "Not authenticated";
+                    authStatusElement.style.color = isAuthenticated ? "green" : "red";
+                    
+                    // Store authenticated user info in localStorage if authenticated
+                    if (isAuthenticated) {
+                        if (data.user_name) {
+                            localStorage.setItem('lexedge_auth_user_name', data.user_name);
+                            console.log("Stored authenticated username:", data.user_name);
+                        }
+                        if (data.user_id) {
+                            localStorage.setItem('lexedge_auth_user_id', data.user_id);
+                            console.log("Stored authenticated user ID:", data.user_id);
+                        }
+                        
+                        // If newly authenticated, update the visibility of the history button
+                        if (!wasAuthenticated) {
+                            document.getElementById('view-history-button').style.display = 'block';
+                        }
+                    } else if (!isAuthenticated && wasAuthenticated) {
+                        // If logged out, remove stored auth user info
+                        localStorage.removeItem('lexedge_auth_user_name');
+                        localStorage.removeItem('lexedge_auth_user_id');
+                        document.getElementById('view-history-button').style.display = 'none';
+                    }
+                    
+                    // Update view history button visibility
+                    document.getElementById('view-history-button').style.display = isAuthenticated ? 'block' : 'none';
+                    
+                    // Add message to chat
+                    addAgentMessage(data);
+                } else if (data.type === "error") {
+                    // Error occurred
+                    console.error("Server error: ", data.message);
+                    removeLoadingAnimation();
+                    isProcessing = false;
+                    enableInput();
+                    addErrorMessage(data.message);
+                }
+            };
+            
+            webSocket.onclose = function(event) {
+                connectionStatus.textContent = "Disconnected";
+                connectionStatus.style.color = "red";
+                
+                // Remove loading animation if it exists
+                removeLoadingAnimation();
+                isProcessing = false;
+                enableInput();
+                
+                // Reconnect after a delay
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            webSocket.onerror = function(error) {
+                console.error("WebSocket error: ", error);
+                connectionStatus.textContent = "Error";
+                connectionStatus.style.color = "red";
+                
+                // Remove loading animation if it exists
+                removeLoadingAnimation();
+                isProcessing = false;
+                enableInput();
+            };
+        }
+        
+        // Add a user message to the chat
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Add a loading animation to the chat
+        function addLoadingAnimation() {
+            // Remove any existing loading animation first
+            removeLoadingAnimation();
+            
+            // Create loading message container
+            loadingElement = document.createElement('div');
+            loadingElement.className = 'message agent-message loading-message';
+            
+            // Create the loading dots animation
+            const loadingDotsContainer = document.createElement('div');
+            loadingDotsContainer.className = 'loading-dots';
+            
+            // Add the three dots
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                loadingDotsContainer.appendChild(dot);
+            }
+            
+            loadingElement.appendChild(loadingDotsContainer);
+            chatContainer.appendChild(loadingElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Remove the loading animation
+        function removeLoadingAnimation() {
+            if (loadingElement && loadingElement.parentNode) {
+                loadingElement.parentNode.removeChild(loadingElement);
+                loadingElement = null;
+            }
+        }
+        
+        // Add an agent message to the chat
+        function addAgentMessage(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message agent-message';
+            
+            // Use formatted response if available, otherwise use plain response
+            if (data.formatted_response) {
+                messageDiv.innerHTML = data.formatted_response;
+            } else {
+                messageDiv.textContent = data.response;
+            }
+            
+            // Add agent name if available
+            if (data.agent) {
+                const agentNameDiv = document.createElement('div');
+                agentNameDiv.className = 'agent-name';
+                agentNameDiv.textContent = `From: ${data.agent}`;
+                messageDiv.appendChild(agentNameDiv);
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Add an error message to the chat
+        function addErrorMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message agent-message';
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = "Error: " + text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Disable input while processing
+        function disableInput() {
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+            messageInput.placeholder = "Waiting for response...";
+        }
+        
+        // Enable input after processing
+        function enableInput() {
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.placeholder = "Type your message here...";
+            messageInput.focus();
+        }
+        
+        // Send a message to the server
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            
+            if (messageText === "" || isProcessing) return;
+            
+            // Set processing state
+            isProcessing = true;
+            
+            // Add message to chat
+            addUserMessage(messageText);
+            
+            // Add loading animation
+            addLoadingAnimation();
+            
+            // Disable input while processing
+            disableInput();
+            
+            // Clear input
+            messageInput.value = "";
+            
+            // Send to server
+            if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+                const message = {
+                    user_id: userId,
+                    query: messageText,
+                    session_id: sessionId,
+                    app_name: "lexedge"
+                };
+                
+                webSocket.send(JSON.stringify(message));
+            } else {
+                removeLoadingAnimation();
+                isProcessing = false;
+                enableInput();
+                addErrorMessage("WebSocket not connected");
+            }
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Initialize
+        connectWebSocket();
+        
+        // Check if we're authenticated on page load (from localStorage)
+        if (localStorage.getItem('lexedge_auth_user_name')) {
+            isAuthenticated = true;
+            authStatusElement.textContent = "Authenticated";
+            authStatusElement.style.color = "green";
+            document.getElementById('view-history-button').style.display = 'block';
+        }
+        
+        // Add test modal button functionality
+        document.getElementById('test-modal-button').addEventListener('click', function() {
+            console.log("Test modal button clicked");
+            
+            // Direct show the modal for testing
+            const modalElement = document.getElementById('history-modal');
+            const historyContent = document.getElementById('history-content');
+            historyContent.innerHTML = `
+                <div style="padding: 20px; text-align: center;">
+                    <h3>Test Modal Content</h3>
+                    <p>This is a test to verify the modal is working correctly.</p>
+                    <p>Current session ID: ${sessionId || 'None'}</p>
+                </div>
+            `;
+            
+            modalElement.style.display = 'block';
+            console.log("Modal display set to:", modalElement.style.display);
+        });
+        
+        // Chat history functionality
+        document.getElementById('view-history-button').addEventListener('click', function() {
+            console.log("View history button clicked");
+            
+            // Debug the history modal element
+            const modalElement = document.getElementById('history-modal');
+            if (modalElement) {
+                console.log("History modal found:", modalElement);
+                console.log("Current display style:", modalElement.style.display);
+                console.log("Current innerHTML length:", modalElement.innerHTML.length);
+                console.log("Current position styles:", {
+                    position: modalElement.style.position,
+                    top: modalElement.style.top,
+                    left: modalElement.style.left,
+                    width: modalElement.style.width,
+                    height: modalElement.style.height,
+                    zIndex: modalElement.style.zIndex
+                });
+            } else {
+                console.error("History modal element not found!");
+            }
+            
+            showChatHistory();
+        });
+        document.getElementById('close-history-button').addEventListener('click', closeHistoryModal);
+        
+        function showChatHistory() {
+            console.log("Show chat history clicked for user:", userId);
+            
+            // Get authenticated user info
+            const authUserName = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_name') || '') : '';
+            const authUserId = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_id') || '') : '';
+            
+            // Check if authenticated
+            if (!isAuthenticated) {
+                console.log("User is not authenticated, showing alert");
+                alert("You need to log in first to view your chat history.");
+                return;
+            }
+            
+            console.log("User is authenticated as:", authUserName, "ID:", authUserId);
+            
+            // Show loading indicator in the modal
+            const historyContent = document.getElementById('history-content');
+            historyContent.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p>Loading chat history for <strong>${authUserName}</strong>...</p>
+                </div>
+            `;
+            
+            // Make sure modal is visible
+            const modalElement = document.getElementById('history-modal');
+            modalElement.style.display = 'block';
+            console.log("History modal display set to:", modalElement.style.display);
+            
+            // Fetch user's chat history with a slight delay to ensure the modal is shown
+            setTimeout(() => {
+                console.log("Timeout callback: Fetching chat history");
+                fetchChatHistory(userId);
+            }, 100);
+        }
+        
+        function fetchChatHistory(userId, retryCount = 0) {
+            const maxRetries = 3;
+            const historyContent = document.getElementById('history-content');
+            
+            // Get authenticated user info if available
+            const authUserName = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_name') || '') : '';
+            const authUserId = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_id') || '') : '';
+            console.log("Authenticated user:", authUserName, "ID:", authUserId);
+            
+            // Show loading message
+            historyContent.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p>Loading chat history for <strong>${authUserName || userId}</strong>...</p>
+                </div>
+            `;
+            
+            // Use auth_user_name parameter to ensure we get all sessions for this authenticated user
+            const url = `/user-chat-history?user_id=${encodeURIComponent(userId)}&app_name=lexedge${authUserName ? `&auth_user_name=${encodeURIComponent(authUserName)}` : ''}`;
+            console.log("Fetching chat history from:", url);
+            
+            fetch(url)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    if (!response.ok) {
+                        throw new Error(`Failed to retrieve chat history: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Retrieved history data with sessions:", data.sessions?.length || 0);
+                    displayChatHistory(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching chat history:', error);
+                    historyContent.innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <p style="color: red;">Error loading chat history: ${error.message}</p>
+                            <button onclick="fetchChatHistory('${userId}')" style="margin-top: 15px; background-color: #007bff; border: none; padding: 8px 16px; border-radius: 4px; color: white; cursor: pointer;">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                });
+        }
+        
+        function displayChatHistory(historyData) {
+            console.log("Starting displayChatHistory with data:", historyData);
+            const historyContent = document.getElementById('history-content');
+            historyContent.innerHTML = '';
+            
+            // Get authenticated user info
+            const authUserName = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_name') || '') : '';
+            
+            if (!historyData || !historyData.sessions || historyData.sessions.length === 0) {
+                console.log("No sessions found in history data");
+                historyContent.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>No chat history found for your account</p>
+                        <p style="font-size: 0.9em; color: #666;">Start new conversations to build your history.</p>
+                    </div>
+                `;
+                document.getElementById('history-modal').style.display = 'block';
+                return;
+            }
+            
+            console.log("Before filtering, sessions count:", historyData.sessions.length);
+            console.log("Current session ID:", sessionId);
+            
+            // Don't filter out sessions - show all authenticated sessions
+            const filteredSessions = historyData.sessions;
+            console.log("After filtering, sessions count:", filteredSessions.length);
+            
+            if (filteredSessions.length === 0) {
+                console.log("No sessions found");
+                historyContent.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>No chat history found for your account</p>
+                        <p style="font-size: 0.9em; color: #666;">Start new conversations to build your history.</p>
+                    </div>
+                `;
+                document.getElementById('history-modal').style.display = 'block';
+                return;
+            }
+            
+            // Sort sessions by last update time (newest first)
+            filteredSessions.sort((a, b) => b.last_update_time - a.last_update_time);
+            
+            // Add debug information
+            const debugHtml = `
+                <div style="margin-bottom: 10px; font-size: 0.8em; color: #666; background-color: #f8f9fa; padding: 5px; border-radius: 5px;">
+                    <div>Found ${filteredSessions.length} previous sessions (not including current session)</div>
+                    <div>Current Session ID: ${sessionId}</div>
+                    <div>Logged in as: ${authUserName}</div>
+                </div>
+            `;
+            
+            // Create a list of sessions with preview
+            let historyHtml = `
+                <div style="margin-bottom: 20px;">
+                    <h3>Your Conversation History</h3>
+                    <p>${filteredSessions.length} previous conversation(s)</p>
+                    ${debugHtml}
+                </div>
+            `;
+            
+            historyHtml += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            // For each session, show a preview card with first message
+            filteredSessions.forEach(session => {
+                console.log("Processing session for display:", session.session_id);
+                const sessionDate = new Date(session.last_update_time * 1000).toLocaleString();
+                const isAuthSession = session.auth_info && session.auth_info.is_authenticated;
+                const sessionUserName = isAuthSession ? session.auth_info.user_name : '';
+                
+                // Find first user message as title
+                let sessionTitle = "Conversation";
+                let firstMessageDate = "";
+                let messageCount = 0;
+                
+                if (session.conversation_history && session.conversation_history.length > 0) {
+                    // Count all user messages
+                    messageCount = session.conversation_history.filter(msg => msg.role === 'user').length;
+                    
+                    // Find first user message
+                    const firstUserMessage = session.conversation_history.find(msg => msg.role === 'user');
+                    if (firstUserMessage) {
+                        // Use first 30 chars of first user message as title
+                        sessionTitle = firstUserMessage.content.length > 30 ? 
+                            firstUserMessage.content.substring(0, 30) + '...' : 
+                            firstUserMessage.content;
+                        
+                        // Get timestamp of first message
+                        if (firstUserMessage.timestamp) {
+                            firstMessageDate = new Date(firstUserMessage.timestamp * 1000).toLocaleString();
+                        }
+                    }
+                }
+                
+                // Store session data as a JSON string attribute for click handler
+                const sessionDataAttr = encodeURIComponent(JSON.stringify({
+                    session_id: session.session_id,
+                    title: sessionTitle,
+                    conversation_history: session.conversation_history
+                }));
+                
+                // Create a nice card for each session - make the whole card clickable
+                historyHtml += `
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; ${isAuthSession ? 'background-color: #f0f8ff; border-color: #007bff;' : ''} cursor: pointer; transition: all 0.2s ease;" 
+                         class="session-card" 
+                         onclick="viewFullSession('${session.session_id}')"
+                         onmouseover="this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)';" 
+                         onmouseout="this.style.boxShadow='none';">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 5px;">"${sessionTitle}"</div>
+                                <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">
+                                    ${firstMessageDate ? `Started: ${firstMessageDate}` : ''}
+                                </div>
+                                <div style="font-size: 0.8em;">
+                                    ${isAuthSession ? 
+                                        `<span style="color: green;">✓ Authenticated as ${sessionUserName}</span><br>` : 
+                                        '<span style="color: #999;">Not authenticated</span><br>'}
+                                    Session ID: ${session.session_id.substring(0, 8)}...
+                                    <br>
+                                    ${messageCount} message${messageCount !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.8em; color: #666;">Last activity: ${sessionDate}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; justify-content: space-between;">
+                            <button 
+                                onclick="event.stopPropagation(); startNewSessionWithContext('${sessionDataAttr}')" 
+                                style="background-color: #28a745; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.9em;">
+                                Continue This Chat
+                            </button>
+                            <button 
+                                onclick="event.stopPropagation(); viewFullSession('${session.session_id}')" 
+                                style="background-color: #6c757d; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.9em;">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyHtml += '</div>';
+            
+            console.log("Setting history HTML and showing modal");
+            historyContent.innerHTML = historyHtml;
+            document.getElementById('history-modal').style.display = 'block';
+        }
+        
+        // Function to start a new session with context from a previous conversation
+        function startNewSessionWithContext(sessionDataEncoded) {
+            try {
+                // Parse the session data
+                const sessionData = JSON.parse(decodeURIComponent(sessionDataEncoded));
+                console.log("Starting new session with context from:", sessionData.session_id);
+                
+                // Check if we have conversation history
+                if (!sessionData.conversation_history || sessionData.conversation_history.length === 0) {
+                    alert("No conversation history available to continue.");
+                    return;
+                }
+                
+                // First close the history modal
+                document.getElementById('history-modal').style.display = 'none';
+                
+                // Clear the current chat and reset session ID
+                chatContainer.innerHTML = '';
+                sessionId = null; // Force creation of a new session
+                
+                // Add a system message indicating we're continuing a previous conversation
+                const systemMessage = document.createElement('div');
+                systemMessage.className = 'message';
+                systemMessage.style.backgroundColor = '#f8f9fa';
+                systemMessage.style.color = '#6c757d';
+                systemMessage.style.textAlign = 'center';
+                systemMessage.style.padding = '8px';
+                systemMessage.style.margin = '10px auto';
+                systemMessage.style.maxWidth = '90%';
+                systemMessage.style.borderRadius = '8px';
+                systemMessage.innerHTML = `
+                    <div>Continuing conversation from "${sessionData.title}"</div>
+                    <div style="font-size: 0.8em; margin-top: 5px;">Previous chat history is available as context</div>
+                `;
+                chatContainer.appendChild(systemMessage);
+                
+                // Build a context summary from the previous conversation
+                let previousContext = "";
+                
+                // Extract conversation for context (up to 10 exchanges to keep it manageable)
+                const contextHistory = [];
+                const maxExchanges = 10;
+                let limitedHistory = [];
+                
+                if (sessionData.conversation_history && sessionData.conversation_history.length > 0) {
+                    // Get the last maxExchanges * 2 messages (user and agent pairs)
+                    limitedHistory = sessionData.conversation_history.slice(-Math.min(sessionData.conversation_history.length, maxExchanges * 2));
+                    
+                    // Add each message to the context
+                    for (const msg of limitedHistory) {
+                        if (msg.role && msg.content) {
+                            contextHistory.push(`${msg.role.toUpperCase()}: ${msg.content}`);
+                        }
+                    }
+                }
+                
+                // Join the context history with newlines
+                previousContext = contextHistory.join("\n");
+                console.log("Created context with", contextHistory.length, "messages");
+                
+                // Create a user-friendly context message
+                const userMessages = sessionData.conversation_history
+                    .filter(msg => msg.role === 'user')
+                    .map(msg => msg.content);
+                
+                // Use the last few user messages as context
+                const lastUserMessages = userMessages.slice(-3);
+                const contextMessage = `I'd like to continue our previous conversation about "${sessionData.title}". ${
+                    lastUserMessages.length > 0 ? 
+                    `For context, I previously asked about: ${lastUserMessages.join("; ")}` : 
+                    "Please continue where we left off."
+                }`;
+                
+                console.log("Sending context message:", contextMessage);
+                
+                // Add this as a user message to the UI
+                addUserMessage(contextMessage);
+                
+                // Add loading animation
+                addLoadingAnimation();
+                
+                // Disable input while processing
+                disableInput();
+                isProcessing = true;
+                
+                // Send to server with null session_id to force creation of a new session
+                if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+                    const message = {
+                        user_id: userId,
+                        query: contextMessage,
+                        session_id: null, // Force creation of a new session
+                        previous_context: previousContext // Send the full conversation context
+                    };
+                    
+                    webSocket.send(JSON.stringify(message));
+                    console.log("Sent request for new session with previous context");
+                } else {
+                    removeLoadingAnimation();
+                    isProcessing = false;
+                    enableInput();
+                    addErrorMessage("WebSocket not connected");
+                }
+            } catch (error) {
+                console.error("Error starting new session with context:", error);
+                alert("Failed to continue the conversation. Please try again.");
+            }
+        }
+        
+        function viewFullSession(sessionId) {
+            // Get authenticated user info
+            const authUserName = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_name') || '') : '';
+            const authUserId = isAuthenticated ? (localStorage.getItem('lexedge_auth_user_id') || '') : '';
+            
+            // Construct URL with the session ID, user ID and auth user name
+            const url = `/chat-history/${sessionId}?user_id=${encodeURIComponent(userId)}&app_name=lexedge${authUserName ? `&auth_user_name=${encodeURIComponent(authUserName)}` : ''}`;
+            console.log("Fetching session details from:", url);
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to retrieve session details');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Retrieved session details:", data);
+                    displayFullSession(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching session details:', error);
+                    alert('Failed to retrieve session details: ' + error.message);
+                });
+        }
+        
+        function displayFullSession(sessionData) {
+            // Create a modal for the full session
+            const sessionModal = document.createElement('div');
+            sessionModal.style.position = 'fixed';
+            sessionModal.style.top = '0';
+            sessionModal.style.left = '0';
+            sessionModal.style.width = '100%';
+            sessionModal.style.height = '100%';
+            sessionModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            sessionModal.style.zIndex = '200';
+            sessionModal.style.display = 'flex';
+            sessionModal.style.justifyContent = 'center';
+            sessionModal.style.alignItems = 'center';
+            
+            // Create content container
+            const content = document.createElement('div');
+            content.style.backgroundColor = 'white';
+            content.style.borderRadius = '8px';
+            content.style.padding = '20px';
+            content.style.width = '80%';
+            content.style.maxWidth = '800px';
+            content.style.maxHeight = '80%';
+            content.style.overflow = 'auto';
+            
+            // Create header with close button
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            header.style.marginBottom = '15px';
+            header.innerHTML = `
+                <h2 style="margin: 0;">Conversation Details</h2>
+                <div>
+                    <button id="continue-session-button" style="background-color: #28a745; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; margin-right: 10px;">Continue This Chat</button>
+                    <button id="close-session-button" style="background-color: #f44336; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer;">Close</button>
+                </div>
+            `;
+            
+            // Create conversation container
+            const conversationContainer = document.createElement('div');
+            
+            if (sessionData.conversation_history && sessionData.conversation_history.length > 0) {
+                // Format all messages
+                let conversationHtml = '';
+                sessionData.conversation_history.forEach(message => {
+                    const timestamp = message.timestamp ? new Date(message.timestamp * 1000).toLocaleString() : '';
+                    const timeHtml = timestamp ? `<div style="font-size: 0.7em; color: #888; margin-bottom: 3px;">${timestamp}</div>` : '';
+                    
+                    if (message.role === 'user') {
+                        conversationHtml += `
+                            <div style="text-align: right; margin-bottom: 8px;">
+                                ${timeHtml}
+                                <span style="background-color: #e3f2fd; padding: 5px 8px; border-radius: 5px; display: inline-block;">
+                                    ${message.content || 'No message'}
+                                </span>
+                            </div>
+                        `;
+                    } else if (message.role === 'agent') {
+                        const agentName = message.agent_name ? `<div style="font-size: 0.7em; color: #666; margin-top: 2px;">Agent: ${message.agent_name}</div>` : '';
+                        
+                        conversationHtml += `
+                            <div style="text-align: left; margin-bottom: 15px;">
+                                ${timeHtml}
+                                <span style="background-color: #ffffff; padding: 5px 8px; border-radius: 5px; border: 1px solid #e0e0e0; display: inline-block;">
+                                    ${message.content || 'No response'}
+                                    ${agentName}
+                                </span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                conversationContainer.innerHTML = conversationHtml;
+            } else {
+                conversationContainer.innerHTML = '<p>No messages in this session</p>';
+            }
+            
+            // Assemble modal
+            content.appendChild(header);
+            content.appendChild(conversationContainer);
+            sessionModal.appendChild(content);
+            document.body.appendChild(sessionModal);
+            
+            // Add event listener to close button
+            document.getElementById('close-session-button').addEventListener('click', function() {
+                document.body.removeChild(sessionModal);
+            });
+            
+            // Add event listener to continue session button
+            document.getElementById('continue-session-button').addEventListener('click', function() {
+                // Prepare session data for continuation
+                const sessionDataObj = {
+                    session_id: sessionData.session_id,
+                    title: sessionData.conversation_history && sessionData.conversation_history.length > 0 ? 
+                        (sessionData.conversation_history.find(msg => msg.role === 'user')?.content || "Conversation") : 
+                        "Conversation",
+                    conversation_history: sessionData.conversation_history || []
+                };
+                
+                // Convert to encoded JSON string
+                const sessionDataEncoded = encodeURIComponent(JSON.stringify(sessionDataObj));
+                
+                // Close the session detail modal
+                document.body.removeChild(sessionModal);
+                
+                // Close the history modal if it's open
+                document.getElementById('history-modal').style.display = 'none';
+                
+                // Continue the session
+                startNewSessionWithContext(sessionDataEncoded);
+            });
+        }
+        
+        function closeHistoryModal() {
+            console.log("Closing history modal");
+            document.getElementById('history-modal').style.display = 'none';
+            console.log("History modal display set to:", document.getElementById('history-modal').style.display);
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,5 @@
+Draft a **{{document_type}}** based on the following facts:
+
+{{facts}}
+
+Provide a complete structured outline ready for a lawyer to finalize.

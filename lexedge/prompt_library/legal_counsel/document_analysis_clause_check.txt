@@ -1,0 +1,1 @@
+Check this document for missing standard clauses, ambiguous language, and enforceability issues.
